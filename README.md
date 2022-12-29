@@ -1,7 +1,7 @@
 - 👋 Hi, I’m @admhabits
 - 👀 I’m interested in Firebase React Php Stack
-- 🌱 I’m currently learning react
-- 💞️ I’m looking to collaborate on React Dashboarc
+- 🌱 I’m currently learning React & Java Spring Boot
+- 💞️ I’m looking to collaborate on React Dashboard
 - 📫 Get in touch send email to admhabits@gmail.com
 
 <!---
