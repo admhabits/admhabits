@@ -18,20 +18,20 @@ $ apt install dnsutils
 ```
 - Testing Domain
 ```shell
-$ nslookup demo.jamkrind.id
+$ nslookup demo.jamkrindo.id
 ```
 ```shell
-$ nslookup srv-prod-1.demo.jamkrind.id
-```
-
-```shell
-$ nslookup srv-prod-2.demo.jamkrind.id
+$ nslookup srv-prod-1.demo.jamkrindo.id
 ```
 
 ```shell
-$ nslookup srv-demo-2.demo.jamkrind.id
+$ nslookup srv-prod-2.demo.jamkrindo.id
 ```
 
 ```shell
-$ nslookup tes.srv-demo-2.demo.jamkrind.id
+$ nslookup srv-demo-2.demo.jamkrindo.id
+```
+
+```shell
+$ nslookup tes.srv-demo-2.demo.jamkrindo.id
 ```
