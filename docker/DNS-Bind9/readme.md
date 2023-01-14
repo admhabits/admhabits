@@ -14,7 +14,7 @@ $ docker exec -it -u root dns-demo bash
 ```
 - Install dnsutils packages
 ```shell
-$ apt install dnsutils
+$ apt update && apt install dnsutils net-tools curl -y
 ```
 - Testing Domain
 ```shell
