@@ -21,6 +21,13 @@ services:
       - sonarqube_logs:/opt/sonarqube/logs
     ports:
       - "9001:9000"
+  init:
+    image: bash
+    privileged: true
+    user: root
+    volumes:
+      - ./init.sh:/mnt/init.sh
+    command: ["sh", "-e", "/mnt/init.sh"]
   jenkins:
     image: jenkins/jenkins
     hostname: jenkins
