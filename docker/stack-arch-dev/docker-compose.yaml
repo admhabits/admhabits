@@ -39,10 +39,10 @@ services:
     image: 'gitlab/gitlab-ee:latest'
     container_name: gitlab
     restart: always
-    hostname: 'gitlab.example.com'
+    hostname: '80-admhabits-admhabits-wtn0xaoi9wy.ws-us104.gitpod.io'
     environment:
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'https://gitlab.example.com'
+        external_url 'https://80-admhabits-admhabits-wtn0xaoi9wy.ws-us104.gitpod.io'
         # Add any other gitlab.rb configuration here, each on its own line
     ports:
       - '80:80'
