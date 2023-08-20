@@ -4,13 +4,11 @@ services:
     image: jenkins/jenkins
     hostname: jenkins
     container_name: jenkins
-    depends_on:
-      - db
     privileged: true
     user: root
     ports:
       - 8081:8080
       - 50000:50000
     volumes:
-      - /home/${user}/jenkins_compose/jenkins_configuration:/var/jenkins_home
+      - /workspace/admhabits/docker/jenkins/config:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
