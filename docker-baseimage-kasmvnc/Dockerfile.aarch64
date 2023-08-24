@@ -360,9 +360,9 @@ RUN \
   echo "**** user perms ****" && \
   sed -e 's/%sudo	ALL=(ALL:ALL) ALL/%sudo ALL=(ALL:ALL) NOPASSWD: ALL/g' \
     -i /etc/sudoers && \
-  echo "abc:abc" | chpasswd && \
-  usermod -s /bin/bash abc && \
-  usermod -aG sudo abc && \
+  echo "snipkode:snipkode" | chpasswd && \
+  usermod -s /bin/bash snipkode && \
+  usermod -aG sudo snipkode && \
   echo "**** kasm support ****" && \
   useradd \
     -u 1000 -U \
@@ -390,7 +390,7 @@ RUN \
     https://raw.githubusercontent.com/moby/moby/master/hack/dind && \
   chmod +x /usr/local/bin/dind && \
   echo 'hosts: files dns' > /etc/nsswitch.conf && \
-  usermod -aG docker abc && \
+  usermod -aG docker snipkode && \
   echo "**** cleanup ****" && \
   apt-get autoclean && \
   rm -rf \

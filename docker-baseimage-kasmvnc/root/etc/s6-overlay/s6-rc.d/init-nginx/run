@@ -6,7 +6,7 @@ NGINX_CONFIG=/etc/nginx/sites-available/default
 # user passed env vars
 CPORT="${CUSTOM_PORT:-3000}"
 CHPORT="${CUSTOM_HTTPS_PORT:-3001}"
-CUSER="${CUSTOM_USER:-abc}"
+CUSER="${CUSTOM_USER:-snipkode}"
 
 # create self signed cert
 if [ ! -f "/config/ssl/cert.pem" ]; then
@@ -17,7 +17,7 @@ if [ ! -f "/config/ssl/cert.pem" ]; then
     -keyout /config/ssl/cert.key \
     -subj "/C=US/ST=CA/L=Carlsbad/O=Linuxserver.io/OU=LSIO Server/CN=*"
   chmod 600 /config/ssl/cert.key
-  chown -R abc:abc /config/ssl
+  chown -R snipkode:snipkode /config/ssl
 fi
 
 # modify nginx config
