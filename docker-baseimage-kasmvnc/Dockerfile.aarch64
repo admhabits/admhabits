@@ -32,7 +32,7 @@ RUN \
   cp index.html vnc.html && \
   mkdir Downloads
 
-FROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.18 as buildstage
+FROM ghcr.io/linuxserver/baseimage-ubuntu:arm64v8-jammy as buildstage
 
 ARG KASMVNC_RELEASE="v1.2.0"
 
@@ -40,72 +40,51 @@ COPY --from=wwwstage /build-out /www
 
 RUN \
   echo "**** install build deps ****" && \
-  apk add \
-    alpine-release \
-    alpine-sdk \
+  apt-get update && \
+  apt-get build-dep -y \
+    libxfont-dev \
+    xorg-server && \
+  apt-get install -y \
     autoconf \
     automake \
-    bash \
-    ca-certificates \
     cmake \
-    coreutils \
-    curl \
-    eudev-dev \
-    font-cursor-misc \
-    font-misc-misc \
-    font-util-dev \
     git \
     grep \
-    jq \
+    libavcodec-dev \
     libdrm-dev \
     libepoxy-dev \
-    libjpeg-turbo-dev \
-    libjpeg-turbo-static \
+    libgbm-dev \
+    libgif-dev \
+    libgnutls28-dev \
+    libgnutls28-dev \
+    libjpeg-dev \
+    libjpeg-turbo8-dev \
     libpciaccess-dev \
+    libpng-dev \
+    libssl-dev \
+    libtiff-dev \
     libtool \
     libwebp-dev \
     libx11-dev \
     libxau-dev \
-    libxcb-dev \
+    libxcursor-dev \
     libxcursor-dev \
     libxcvt-dev \
     libxdmcp-dev \
     libxext-dev \
-    libxfont2-dev \
     libxkbfile-dev \
+    libxrandr-dev \
     libxrandr-dev \
     libxshmfence-dev \
     libxtst-dev \
-    mesa-dev \
-    mesa-dri-gallium \
-    mesa-va-gallium \
-    mesa-vulkan-ati \
-    mesa-vulkan-broadcom \
-    mesa-vulkan-freedreno \
-    mesa-vulkan-panfrost \
     meson \
     nettle-dev \
-    openssl-dev \
-    pixman-dev \
-    procps \
-    shadow \
     tar \
-    tzdata \
-    wayland-dev \
+    tightvncserver \
+    wget \
     wayland-protocols \
-    xcb-util-dev \
-    xcb-util-image-dev \
-    xcb-util-keysyms-dev \
-    xcb-util-renderutil-dev \
-    xcb-util-wm-dev \
     xinit \
-    xkbcomp \
-    xkbcomp-dev \
-    xkeyboard-config \
-    xorgproto \
-    xorg-server-common \
-    xorg-server-dev \
-    xtrans
+    xserver-xorg-dev
 
 RUN \
   echo "**** build libjpeg-turbo ****" && \
@@ -153,30 +132,28 @@ RUN \
   patch -Np1 -i ../xserver${XORG_PATCH}.patch && \
   patch -s -p0 < ../CVE-2022-2320-v1.20.patch && \
   autoreconf -i && \
-  ./configure \
-    --disable-config-hal \
-    --disable-config-udev \
-    --disable-dmx \
-    --disable-dri \
-    --disable-dri2 \
-    --disable-kdrive \
+  ./configure --prefix=/opt/kasmweb \
+    --with-xkb-path=/usr/share/X11/xkb \
+    --with-xkb-output=/var/lib/xkb \
+    --with-xkb-bin-directory=/usr/bin \
+    --with-default-font-path="/usr/share/fonts/X11/misc,/usr/share/fonts/X11/cyrillic,/usr/share/fonts/X11/100dpi/:unscaled,/usr/share/fonts/X11/75dpi/:unscaled,/usr/share/fonts/X11/Type1,/usr/share/fonts/X11/100dpi,/usr/share/fonts/X11/75dpi,built-ins" \
+    --with-sha1=libcrypto \
+    --without-dtrace --disable-dri \
     --disable-static \
-    --disable-xephyr \
     --disable-xinerama \
+    --disable-xvfb \
     --disable-xnest \
     --disable-xorg \
-    --disable-xvfb \
-    --disable-xwayland \
+    --disable-dmx \
     --disable-xwin \
-    --enable-dri3 \
+    --disable-xephyr \
+    --disable-kdrive \
+    --disable-config-hal \
+    --disable-config-udev \
+    --disable-dri2 \
     --enable-glx \
-    --prefix=/opt/kasmweb \
-    --with-default-font-path="/usr/share/fonts/X11/misc,/usr/share/fonts/X11/cyrillic,/usr/share/fonts/X11/100dpi/:unscaled,/usr/share/fonts/X11/75dpi/:unscaled,/usr/share/fonts/X11/Type1,/usr/share/fonts/X11/100dpi,/usr/share/fonts/X11/75dpi,built-ins" \
-    --without-dtrace \
-    --with-sha1=libcrypto \
-    --with-xkb-bin-directory=/usr/bin \
-    --with-xkb-output=/var/lib/xkb \
-    --with-xkb-path=/usr/share/X11/xkb && \
+    --disable-xwayland \
+    --enable-dri3 && \
   find . -name "Makefile" -exec sed -i 's/-Werror=array-bounds//g' {} \; && \
   make -j4
 
@@ -192,34 +169,39 @@ RUN \
   cp /src/unix/xserver/hw/vnc/Xvnc.man man/man1/Xvnc.1 && \
   mkdir lib && \
   cd lib && \
-  ln -s /usr/lib/xorg/modules/dri dri && \
+  ln -s /usr/lib/aarch64-linux-gnu/dri dri && \
   cd /src && \
   mkdir -p builder/www && \
   cp -ax /www/* builder/www/ && \
+  cp builder/www/index.html builder/www/vnc.html && \
   make servertarball && \
   mkdir /build-out && \
   tar xzf \
     kasmvnc-Linux*.tar.gz \
-    -C /build-out/
+    -C /build-out/ && \
+  rm -Rf /build-out/usr/local/man
 
 # nodejs builder
-FROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.18 as nodebuilder
+FROM ghcr.io/linuxserver/baseimage-ubuntu:arm64v8-jammy as nodebuilder
 ARG KCLIENT_RELEASE
 
 RUN \
   echo "**** install build deps ****" && \
-  apk add --no-cache \
-    alpine-sdk \
-    curl \
-    cmake \
+  apt-get update && \
+  apt-get install -y \
+    gnupg && \
+  curl -s https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add - && \
+  echo 'deb https://deb.nodesource.com/node_18.x jammy main' \
+    > /etc/apt/sources.list.d/nodesource.list && \
+  apt-get update && \
+  apt-get install -y \
     g++ \
     gcc \
+    libpam0g-dev \
+    libpulse-dev \
     make \
-    nodejs \
-    npm \
-    pulseaudio-dev \
-    python3
-
+    nodejs
+	
 RUN \
   echo "**** grab source ****" && \
   mkdir -p /kclient && \
@@ -241,12 +223,12 @@ RUN \
   rm -f package-lock.json
 
 # runtime stage
-FROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.18
+FROM ghcr.io/linuxserver/baseimage-ubuntu:arm64v8-jammy
 
 # set version label
 ARG BUILD_DATE
 ARG VERSION
-ARG KASMBINS_RELEASE="1.14.0"
+ARG KASMBINS_RELEASE="1.13.0"
 LABEL build_version="Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}"
 LABEL maintainer="thelamer"
 LABEL "com.kasmweb.image"="true"
@@ -266,88 +248,128 @@ COPY --from=nodebuilder /kclient /kclient
 COPY --from=buildstage /build-out/ /
 
 RUN \
+  echo "**** enable locales ****" && \
+  sed -i \
+    '/locale/d' \
+    /etc/dpkg/dpkg.cfg.d/excludes && \
   echo "**** install deps ****" && \
-  apk add --no-cache \
-    bash \
+  apt-get update && \
+  apt-get install -y \
+    gnupg && \
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
+  echo "deb [arch=arm64] https://download.docker.com/linux/ubuntu jammy stable" > \
+    /etc/apt/sources.list.d/docker.list && \
+  curl -s https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add - && \
+  echo 'deb https://deb.nodesource.com/node_18.x jammy main' \
+    > /etc/apt/sources.list.d/nodesource.list && \
+  apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
     ca-certificates \
+    containerd.io \
     cups \
     cups-client \
+    cups-pdf \
+    docker-ce \
+    docker-ce-cli \
+    docker-compose-plugin \
     dbus-x11 \
-    docker \
-    docker-cli-compose \
     ffmpeg \
-    font-noto \
+    file \
     fuse-overlayfs \
-    gcompat \
-    libgcc \
-    libgomp \
-    libjpeg-turbo \
-    libstdc++ \
-    libwebp \
+    libdatetime-perl \
+    libfontenc1 \
+    libfreetype6 \
+    libgbm1 \
+    libgcrypt20 \
+    libgl1-mesa-dri \
+    libglu1-mesa \
+    libgnutls30 \
+    libgomp1 \
+    libhash-merge-simple-perl \
+    libjpeg-turbo8 \
+    liblist-moreutils-perl \
+    libp11-kit0 \
+    libpam0g \
+    libpixman-1-0 \
+    libscalar-list-utils-perl \
+    libswitch-perl \
+    libtasn1-6 \
+    libtry-tiny-perl \
+    libwebp7 \
+    libx11-6 \
+    libxau6 \
+    libxcb1 \
+    libxcursor1 \
+    libxdmcp6 \
+    libxext6 \
+    libxfixes3 \
     libxfont2 \
-    libxshmfence \
-    mcookie \
-    mesa \
-    mesa-dri-gallium \
-    mesa-gbm \
-    mesa-gl \
+    libxinerama1 \
+    libxshmfence1 \
+    libxtst6 \
+    libyaml-tiny-perl \
+    mesa-va-drivers \
     nginx \
     nodejs \
     openbox \
     openssh-client \
     openssl \
-    pciutils-libs \
+    pciutils \
     perl \
-    perl-datetime \
-    perl-hash-merge-simple \
-    perl-list-moreutils \
-    perl-switch \
-    perl-try-tiny \
-    perl-yaml-tiny \
-    pixman \
+    procps \
     pulseaudio \
     pulseaudio-utils \
-    py3-xdg \
     python3 \
-    setxkbmap \
+    software-properties-common \
+    ssl-cert \
     sudo \
     tar \
+    util-linux \
+    x11-apps \
+    x11-common \
+    x11-utils \
+    x11-xkb-utils \
+    x11-xkb-utils \
+    x11-xserver-utils \
     xauth \
-    xf86-video-amdgpu \
-    xf86-video-ati \
-    xf86-video-nouveau \
-    xkbcomp \
-    xkeyboard-config \
-    xterm && \
-  apk add --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing/ \
-    cups-pdf && \
+    xdg-utils \
+    xfonts-base \
+    xkb-data \
+    xserver-common \
+    xserver-xorg-core \
+    xserver-xorg-video-amdgpu \
+    xserver-xorg-video-ati \
+    xserver-xorg-video-nouveau \
+    xserver-xorg-video-qxl \
+    xterm \
+    xutils \
+    zlib1g && \
   echo "**** printer config ****" && \
-  sed -i \
-    "s:^#Out.*:Out /home/kasm-user/PDF:" \
+  sed -i -r \
+    -e "s:^(Out\s).*:\1/home/kasm-user/PDF:" \
     /etc/cups/cups-pdf.conf && \
-  sed -i \
-    's/^SystemGroup .*/SystemGroup lpadmin root/' \
-    /etc/cups/cups-files.conf && \
   echo "**** filesystem setup ****" && \
   ln -s /usr/local/share/kasmvnc /usr/share/kasmvnc && \
   ln -s /usr/local/etc/kasmvnc /etc/kasmvnc && \
   ln -s /usr/local/lib/kasmvnc /usr/lib/kasmvncserver && \
   echo "**** openbox tweaks ****" && \
   sed -i \
-    's/NLIMC/NLMC/g' \
+    -e 's/NLIMC/NLMC/g' \
+    -e '/debian-menu/d' \
     /etc/xdg/openbox/rc.xml && \
   echo "**** user perms ****" && \
+  sed -e 's/%sudo	ALL=(ALL:ALL) ALL/%sudo ALL=(ALL:ALL) NOPASSWD: ALL/g' \
+    -i /etc/sudoers && \
   echo "abc:abc" | chpasswd && \
   usermod -s /bin/bash abc && \
-  echo '%wheel ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/wheel && \
-  adduser abc wheel && \
+  usermod -aG sudo abc && \
   echo "**** kasm support ****" && \
   useradd \
     -u 1000 -U \
     -d /home/kasm-user \
     -s /bin/bash kasm-user && \
   echo "kasm-user:kasm" | chpasswd && \
-  adduser kasm-user wheel && \
+  usermod -aG sudo kasm-user && \
   mkdir -p /home/kasm-user && \
   chown 1000:1000 /home/kasm-user && \
   mkdir -p /var/run/pulse && \
@@ -357,20 +379,23 @@ RUN \
     | tar xzvf - -C /kasmbins/ && \
   chmod +x /kasmbins/* && \
   chown -R 1000:1000 /kasmbins && \
-  chown 1000:1000 /usr/share/kasmvnc/www/Downloads && \
+  chown 1000:1000 /usr/share/kasmvnc/www/Downloads/ && \
   echo "**** dind support ****" && \
-  addgroup -S dockremap && \
-  adduser -S -G dockremap dockremap && \
+  useradd -U dockremap && \
+  usermod -G dockremap dockremap && \
   echo 'dockremap:165536:65536' >> /etc/subuid && \
   echo 'dockremap:165536:65536' >> /etc/subgid && \
   curl -o \
   /usr/local/bin/dind -L \
     https://raw.githubusercontent.com/moby/moby/master/hack/dind && \
   chmod +x /usr/local/bin/dind && \
-  usermod -aG docker abc && \
   echo 'hosts: files dns' > /etc/nsswitch.conf && \
+  usermod -aG docker abc && \
   echo "**** cleanup ****" && \
+  apt-get autoclean && \
   rm -rf \
+    /var/lib/apt/lists/* \
+    /var/tmp/* \
     /tmp/*
 
 # add local files
