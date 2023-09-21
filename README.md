@@ -1,8 +1,8 @@
 - 👋 Hi, I’m @admhabits
-- 👀 I’m interested in Firebase React Php Stack
-- 🌱 I’m currently learning React & Java Spring Boot
+- 👀 I’m interested Rust Project
+- 🌱 I’m currently learning Rust & Java Spring Boot
 - 💞️ I’m looking to collaborate on React Dashboard
-- 📫 Get in touch send email to admhabits@gmail.com
+- 📫 Get in touch send email to alamhafidz61@gmail.com
 
 <!---
 admhabits/admhabits is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
